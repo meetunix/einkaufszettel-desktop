@@ -16,15 +16,20 @@ class Controller:
         self.client = EinkaufszettelRestClient(server)
 
     def get_ez(self, eid: str) -> None:
-        self.submit_async_task(self.client.get_ez, self.__set_ez, [eid])
+        print("get_ez")
+        self.submit_async_task(self.__fetch_and_set_ez, eid)
 
     # callbacks
-    def __set_ez(self, ez: str):
-        print(ez)
-
-    # async caller
-    def submit_async_task(self, method, callback, args: List) -> None:
+    def __fetch_and_set_ez(self, eid: str) -> None:
         try:
-            self.executor.submit(method, callback, *args)
+            response = self.client.get_ez(eid)
         except Exception as e:
             print(e)
+            return
+
+        print("callable is executed here -> " + response)
+
+    # async caller
+    def submit_async_task(self, method, *args) -> None:
+        print("submit_async_task")
+        self.executor.submit(method, *args)

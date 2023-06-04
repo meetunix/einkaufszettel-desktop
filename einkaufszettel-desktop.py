@@ -15,6 +15,9 @@ class EinkaufszettelDesktop(tk.Tk):
             self.resizable(False, False)
         self.controller = Controller(server=server)
 
+        self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df80")
+        self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df81")
+
     def set_server(self, server: Server):
         self.controller.set_server(server)
 
@@ -30,7 +33,7 @@ def main() -> None:
     server = Server(name="localhost", base_url="http://127.0.0.1", port=18080)
 
     app = EinkaufszettelDesktop(args, server)
-    app.mainloop()
+    #app.mainloop()
 
 
 if __name__ == "__main__":
