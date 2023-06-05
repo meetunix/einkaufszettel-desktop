@@ -1,16 +1,31 @@
+import json
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from types import SimpleNamespace
 from typing import List
 
 from einkaufszettel.client import EinkaufszettelRestClient
-from einkaufszettel.entities import Einkaufszettel, Server
+from einkaufszettel.entities import Einkaufszettel, Server, Configuration
 
 
 class Controller:
 
-    def __init__(self, server: Server):
+    def __init__(self, config_path: str = "~/.config/ezrc.json"):
         self.executor = ThreadPoolExecutor(max_workers=2)
-        self.client = EinkaufszettelRestClient(server)
-        pass
+        self.__load_config(config_path)
+        self.client = EinkaufszettelRestClient(self.configuration.get_default_server())
+
+    def __load_config(self, path: str) -> None:
+        """Load configuration object from file (default: ~/.config/ezrc.json)."""
+        path = Path(path).expanduser()
+        if not path.is_file():
+            pass  # TODO execute config window for creating initial config
+        self.configuration = Configuration.from_json(json.loads(path.read_text()))
+
+    def get_configuration(self, path: str, force_reload: bool = False) -> Configuration:
+        if force_reload or self.configuration is None:
+            self.__load_config(path)
+        return self.configuration
 
     def set_server(self, server: Server) -> None:
         self.client = EinkaufszettelRestClient(server)

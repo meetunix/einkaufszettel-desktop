@@ -1,0 +1,23 @@
+{
+  "ezs": [
+    {
+      "eid": "76f2c9e4-ea57-4df6-bdbf-cc7a5301df80",
+      "name": "test-ez",
+      "server_id": 1
+    }
+  ],
+  "servers": [
+    {
+      "base_url": "http://127.0.0.1",
+      "descr": "n.a.",
+      "id": 1,
+      "name": "localhost",
+      "port": 18080,
+      "username": null,
+      "password": null
+    }
+  ],
+  "default_server_id": 1,
+  "default_eid": "76f2c9e4-ea57-4df6-bdbf-cc7a5301df80",
+  "version": 1
+}
