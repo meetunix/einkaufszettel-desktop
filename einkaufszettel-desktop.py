@@ -1,10 +1,8 @@
-import tkinter as tk
 import argparse
+import tkinter as tk
 from argparse import Namespace
-from pathlib import Path
 
 from einkaufszettel.controller import Controller
-from einkaufszettel.entities import Server, SavedEZ, Configuration
 
 
 class EinkaufszettelDesktop(tk.Tk):
@@ -16,8 +14,8 @@ class EinkaufszettelDesktop(tk.Tk):
             self.resizable(False, False)
         self.controller = Controller(config_path="./config/ezrc.json")
 
-        self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df80")
-        self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df81")
+        self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df80", print)
+        self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df81", print)
 
     def on_closing(self):
         self.destroy()

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import List, Set
 
 
+
 class ConfigurationException(Exception):
     pass
 
@@ -52,10 +53,9 @@ class Configuration(ExportBase):
 
     @staticmethod
     def from_json(json_conf: json):
-        servers = {Server(**s) for s in json_conf["servers"]}
-        ezs = {SavedEZ(**ez) for ez in json_conf["ezs"]}
-        return Configuration(version=json_conf["version"], default_server_id=json_conf["default_server_id"], ezs=ezs,
-                             servers=servers, default_eid=json_conf["default_eid"])
+        json_conf["servers"] = {Server(**s) for s in json_conf["servers"]}
+        json_conf["ezs"] = {SavedEZ(**ez) for ez in json_conf["ezs"]}
+        return Configuration(**json_conf)
 
     def get_default_server(self) -> Server:
         for server in self.servers:
@@ -114,3 +114,8 @@ class Einkaufszettel(ExportBase):
 
     def get_json(self):
         return json.dumps(dataclasses.asdict(self), sort_keys=True)
+
+    @staticmethod
+    def from_json(json_ez: json):
+        json_ez["items"]= [Item(**item) for item in json_ez["items"]]
+        return Einkaufszettel(**json_ez)

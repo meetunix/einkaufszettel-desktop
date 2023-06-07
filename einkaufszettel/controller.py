@@ -1,8 +1,6 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from types import SimpleNamespace
-from typing import List
 
 from einkaufszettel.client import EinkaufszettelRestClient
 from einkaufszettel.entities import Einkaufszettel, Server, Configuration
@@ -30,19 +28,20 @@ class Controller:
     def set_server(self, server: Server) -> None:
         self.client = EinkaufszettelRestClient(server)
 
-    def get_ez(self, eid: str) -> None:
+    def get_ez(self, eid: str, callback) -> None:
         print("get_ez")
-        self.submit_async_task(self.__fetch_and_set_ez, eid)
+        self.submit_async_task(self.__fetch_and_set_ez, eid, callback)
 
     # callbacks
-    def __fetch_and_set_ez(self, eid: str) -> None:
+    def __fetch_and_set_ez(self, eid: str, callback) -> None:
         try:
             response = self.client.get_ez(eid)
         except Exception as e:
             print(e)
             return
 
-        print("callable is executed here -> " + response)
+        ez = Einkaufszettel.from_json(json.loads(response))
+        callback(ez) # TODO: execute callable here
 
     # async caller
     def submit_async_task(self, method, *args) -> None:
