@@ -3,6 +3,7 @@ import tkinter as tk
 from argparse import Namespace
 
 from einkaufszettel.controller import Controller
+from einkaufszettel.view import ListFrame
 
 
 class EinkaufszettelDesktop(tk.Tk):
@@ -14,8 +15,15 @@ class EinkaufszettelDesktop(tk.Tk):
             self.resizable(False, False)
         self.controller = Controller(config_path="./config/ezrc.json")
 
-        self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df80", print)
-        self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df81", print)
+        self.columnconfigure(1, weight=3)  # ListFrame
+        self.columnconfigure(2, weight=6)  # EditFrame
+        self.rowconfigure(1, weight=1)
+
+        self.list_frame = ListFrame(self)
+        self.list_frame.grid(column=1, row=1)
+
+        #self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df80", print)
+        #self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df81", print)
 
     def on_closing(self):
         self.destroy()
@@ -27,7 +35,7 @@ def main() -> None:
     args = parser.parse_args()
 
     app = EinkaufszettelDesktop(args)
-    # app.mainloop()
+    app.mainloop()
 
 
 if __name__ == "__main__":

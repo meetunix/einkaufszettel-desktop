@@ -26,7 +26,7 @@ class Controller:
         return self.configuration
 
     def set_server(self, server: Server) -> None:
-        self.client = EinkaufszettelRestClient(server)
+        self.client.set_server = server
 
     def get_ez(self, eid: str, callback) -> None:
         print("get_ez")
@@ -45,5 +45,4 @@ class Controller:
 
     # async caller
     def submit_async_task(self, method, *args) -> None:
-        print("submit_async_task")
         self.executor.submit(method, *args)
