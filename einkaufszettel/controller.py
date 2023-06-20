@@ -1,13 +1,13 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import List
 
 from einkaufszettel.client import EinkaufszettelRestClient
 from einkaufszettel.entities import Einkaufszettel, Server, Configuration
 
 
 class Controller:
-
     def __init__(self, config_path: str = "~/.config/ezrc.json"):
         self.executor = ThreadPoolExecutor(max_workers=2)
         self.__load_config(config_path)
@@ -32,6 +32,9 @@ class Controller:
         print("get_ez")
         self.submit_async_task(self.__fetch_and_set_ez, eid, callback)
 
+    def get_all_ez(self) -> List[Einkaufszettel]:
+        return sorted(list(self.configuration.ezs), key=lambda x: x.name)
+
     # callbacks
     def __fetch_and_set_ez(self, eid: str, callback) -> None:
         try:
@@ -41,7 +44,7 @@ class Controller:
             return
 
         ez = Einkaufszettel.from_json(json.loads(response))
-        callback(ez) # TODO: execute callable here
+        callback(ez)  # TODO: execute callable here
 
     # async caller
     def submit_async_task(self, method, *args) -> None:

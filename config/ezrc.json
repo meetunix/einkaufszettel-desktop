@@ -9,7 +9,7 @@
   "servers": [
     {
       "base_url": "http://127.0.0.1",
-      "descr": "n.a.",
+      "descr": "local server for debugging",
       "id": 1,
       "name": "localhost",
       "port": 18080,
