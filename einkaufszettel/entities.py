@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import List, Set
 
 
-
 class ConfigurationException(Exception):
     pass
 
@@ -81,7 +80,8 @@ class Configuration(ExportBase):
             if ez.eid == self.default_eid:
                 return ez
         raise ConfigurationException(
-            f"The Einkaufszettel with the default id {self.default_eid} does not exist in configuration.")
+            f"The Einkaufszettel with the default id {self.default_eid} does not exist in configuration."
+        )
 
     def set_default_ez(self, ez: SavedEZ) -> None:
         self.add_new_ez(ez)
@@ -117,5 +117,5 @@ class Einkaufszettel(ExportBase):
 
     @staticmethod
     def from_json(json_ez: json):
-        json_ez["items"]= [Item(**item) for item in json_ez["items"]]
+        json_ez["items"] = [Item(**item) for item in json_ez["items"]]
         return Einkaufszettel(**json_ez)

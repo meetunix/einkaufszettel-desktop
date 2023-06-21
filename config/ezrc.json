@@ -1,8 +1,53 @@
 {
   "ezs": [
     {
-      "eid": "76f2c9e4-ea57-4df6-bdbf-cc7a5301df80",
-      "name": "test-ez",
+      "eid": "18aede70-a704-449d-a23f-ece30998ab34",
+      "name": "test-000",
+      "server_id": 1
+    },
+    {
+      "eid": "6d72f704-ffc4-44a8-aaf3-aac99b90174d",
+      "name": "test-001",
+      "server_id": 1
+    },
+    {
+      "eid": "aeb6c57f-49a1-4b46-88ee-ca45c0053bbc",
+      "name": "test-002",
+      "server_id": 1
+    },
+    {
+      "eid": "053a00c4-42f8-4632-8dd4-40179a66ea0a",
+      "name": "test-003",
+      "server_id": 1
+    },
+    {
+      "eid": "fe6cc8c7-a948-42df-be7f-5c761fbdf78e",
+      "name": "test-004",
+      "server_id": 1
+    },
+    {
+      "eid": "c9df0d84-7c43-4329-b0e7-878e04d0b5a5",
+      "name": "test-005",
+      "server_id": 1
+    },
+    {
+      "eid": "39296a8d-bb49-4908-9296-bf00f712afb0",
+      "name": "test-006",
+      "server_id": 1
+    },
+    {
+      "eid": "d4b70003-2050-4fc1-8c9a-000529806dad",
+      "name": "test-007",
+      "server_id": 1
+    },
+    {
+      "eid": "1861b947-3092-4cae-a0a3-40a6fa6904b3",
+      "name": "test-008",
+      "server_id": 1
+    },
+    {
+      "eid": "bafbadd4-c583-4981-a223-1463c3d59b10",
+      "name": "test-009",
       "server_id": 1
     }
   ],

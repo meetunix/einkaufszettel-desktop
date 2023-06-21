@@ -35,7 +35,6 @@ class ChooseEzWindow(PopUpWindow):
         self.columnconfigure(0, weight=20)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0)
-        self.ezs = controller.get_all_ez()
 
         self.frame_listbox = BasicFrame(self)
         self.frame_listbox.columnconfigure(0, weight=1000)
@@ -48,6 +47,34 @@ class ChooseEzWindow(PopUpWindow):
         self.scroller = tkinter.Scrollbar(self.frame_listbox, orient=tkinter.VERTICAL, command=self.listbox_ezs.yview)
         self.scroller.grid(column=1, row=0, sticky="NS")
         self.listbox_ezs["yscrollcommand"] = self.scroller.set
+
+        self.frame_left = BasicFrame(self)
+        self.frame_left.columnconfigure(0, weight=3, minsize=40)
+        self.frame_left.columnconfigure(1, weight=1, minsize=60)
+
+        self.labels = ["Name", "ID", "Version", "Items", "Server (name)", "Server-URL"]
+        rows = list(range(len(self.labels) + 1))
+        for i in rows:
+            self.frame_left.rowconfigure(i)
+        self.frame_left.grid(column=1, row=0, **self.frame_left.options)
+
+        self.button_load = ttk.Button(self.frame_left, text="laden", command=self.__load_ez)
+        self.button_load.grid(columnspan=1, row=rows[-1], padx=5, pady=5, sticky="NS")
+
+        # set static labels
+        idx = 0
+        for txt in self.labels:
+            label = ttk.Label(self.frame_left, text=f"{txt}: ")
+            label.grid(column=0, row=idx, sticky="w")
+            idx += 1
+
+        self.__refresh(controller)
+
+    def __load_ez(self):
+        pass  # todo
+
+    def __refresh(self, controller: Controller):
+        self.ezs = controller.get_all_ez()
         idx = 0
         for ez in self.ezs:
             self.listbox_ezs.insert(idx, f"{ez.name:16}")
