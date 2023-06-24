@@ -1,0 +1,2 @@
+class EZConfigurationException(Exception):
+    pass

@@ -1,7 +1,17 @@
 import tkinter
+from enum import Enum
 from tkinter import ttk
+from typing import Dict
 
 from einkaufszettel.controller import Controller
+from einkaufszettel.entities import Einkaufszettel, ConfigEZ
+
+
+class EZSelectLabel(Enum):
+    NAME = "Name"
+    ID = "ID"
+    SERVER_NAME = "Server-Name"
+    SERVER_URL = "Server-URL"
 
 
 class BasicFrame(ttk.Frame):
@@ -32,6 +42,8 @@ class PopUpWindow(tkinter.Toplevel):
 class ChooseEzWindow(PopUpWindow):
     def __init__(self, controller: Controller):
         super().__init__()
+        self.controller = controller
+
         self.columnconfigure(0, weight=20)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0)
@@ -42,7 +54,7 @@ class ChooseEzWindow(PopUpWindow):
         self.frame_listbox.rowconfigure(0)
         self.frame_listbox.grid(column=0, row=0, sticky="NSEW")
 
-        self.__refresh(controller)
+        self.__refresh()
         self.listbox_ezs = tkinter.Listbox(
             self.frame_listbox, listvariable=self.listvar_ezs, exportselection=0, selectmode=tkinter.SINGLE
         )
@@ -50,13 +62,13 @@ class ChooseEzWindow(PopUpWindow):
         self.scroller = tkinter.Scrollbar(self.frame_listbox, orient=tkinter.VERTICAL, command=self.listbox_ezs.yview)
         self.scroller.grid(column=1, row=0, sticky="NS")
         self.listbox_ezs["yscrollcommand"] = self.scroller.set
+        self.listbox_ezs.bind('<<ListboxSelect>>', self.__on_listbox_select)
 
         self.frame_left = BasicFrame(self)
-        self.frame_left.columnconfigure(0, weight=3, minsize=40)
-        self.frame_left.columnconfigure(1, weight=1, minsize=60)
+        self.frame_left.columnconfigure(0, weight=3, minsize=80)  # todo minsize has no effect
+        self.frame_left.columnconfigure(1, weight=1, minsize=120)
 
-        self.labels = ["Name", "ID", "Version", "Items", "Server (name)", "Server-URL"]
-        rows = list(range(len(self.labels) + 1))
+        rows = list(range(len(EZSelectLabel) + 1))
         for i in rows:
             self.frame_left.rowconfigure(i)
         self.frame_left.grid(column=1, row=0, **self.frame_left.options)
@@ -66,25 +78,38 @@ class ChooseEzWindow(PopUpWindow):
 
         # set static labels
         idx = 0
-        for txt in self.labels:
-            label = ttk.Label(self.frame_left, text=f"{txt}: ")
-            label.grid(column=0, row=idx, sticky="w")
+        self.label_map = {}
+        for select_label in EZSelectLabel:
+            label = ttk.Label(self.frame_left, text=f"{select_label.value}: ")
+            label.grid(column=0, row=idx, sticky="W")
+            label_dynamic = ttk.Label(self.frame_left, text=f"n.a.")
+            label_dynamic.grid(column=1, row=idx, sticky="W")
+            self.label_map[select_label] = label_dynamic
             idx += 1
 
-        self.__refresh(controller)
+        self.__refresh()
+
+    def __on_listbox_select(self, event):
+        selected_idx = self.listbox_ezs.curselection()[0]
+        config_ez: ConfigEZ = self.config_ezs[selected_idx]
+        server = self.controller.get_configuration().get_server_by_id(config_ez.server_id)
+        self.label_map[EZSelectLabel.ID]["text"] = config_ez.eid
+        self.label_map[EZSelectLabel.NAME]["text"] = config_ez.name
+        self.label_map[EZSelectLabel.SERVER_NAME]["text"] = server.name
+        self.label_map[EZSelectLabel.SERVER_URL]["text"] = server.base_url
 
     def __load_ez(self):
         """Loads the EZ from remote and close the window."""
         # load the ez from lokal cache
         pass  # todo
 
-    def __refresh_listvar_ez(self, controller: Controller):
+    def __refresh_listvar_ez(self):
         # todo throw configuration exception
-        ezs = controller.get_all_ez_from_config()
-        self.listvar_ezs = tkinter.Variable(value=ezs, name="dads")
+        self.config_ezs = self.controller.get_all_ez_from_config()
+        self.listvar_ezs = tkinter.Variable(value=self.config_ezs, name="dads")
 
-    def __refresh(self, controller: Controller):
-        self.__refresh_listvar_ez(controller)
+    def __refresh(self):
+        self.__refresh_listvar_ez()
 
 
 def dummy_action():
@@ -160,3 +185,7 @@ class ListFrame(BasicFrame):
         self.listbox_cart["yscrollcommand"] = self.scroller.set
         for i in range(120):
             self.listbox_cart.insert(i, f"test {i}")
+
+
+## util functions
+

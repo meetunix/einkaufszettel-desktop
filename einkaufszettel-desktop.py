@@ -27,8 +27,8 @@ class EinkaufszettelDesktop(tk.Tk):
         self.list_frame = ListFrame(self)
         self.list_frame.grid(column=0, row=1, sticky="NSEW")
 
-        # self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df80", print)
-        # self.controller.get_ez("76f2c9e4-ea57-4df6-bdbf-cc7a5301df81", print)
+        # self.controller.get_ez_from_remote("76f2c9e4-ea57-4df6-bdbf-cc7a5301df80", print)
+        # self.controller.get_ez_from_remote("76f2c9e4-ea57-4df6-bdbf-cc7a5301df81", print)
 
     def on_closing(self):
         self.destroy()

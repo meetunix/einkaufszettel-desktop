@@ -4,9 +4,7 @@ import uuid
 from dataclasses import dataclass
 from typing import List, Set
 
-
-class ConfigurationException(Exception):
-    pass
+from einkaufszettel.exceptions import EZConfigurationException
 
 
 @dataclass
@@ -33,7 +31,7 @@ class Server:
 
 
 @dataclass
-class SavedEZ:
+class ConfigEZ:
     eid: str
     name: str
     server_id: int  # the server where the ez belongs to
@@ -51,20 +49,23 @@ class Configuration(ExportBase):
     version: int
     default_server_id: int
     default_eid: str
-    ezs: Set[SavedEZ]
+    ezs: Set[ConfigEZ]
     servers: Set[Server]
 
     @staticmethod
     def from_json(json_conf: json):
         json_conf["servers"] = {Server(**s) for s in json_conf["servers"]}
-        json_conf["ezs"] = {SavedEZ(**ez) for ez in json_conf["ezs"]}
+        json_conf["ezs"] = {ConfigEZ(**ez) for ez in json_conf["ezs"]}
         return Configuration(**json_conf)
 
     def get_default_server(self) -> Server:
+        return self.get_server_by_id(self.default_server_id)
+
+    def get_server_by_id(self, id: int) -> Server:
         for server in self.servers:
-            if server.id == self.default_server_id:
+            if server.id == id:
                 return server
-        raise ConfigurationException(f"The server with the default server id {self.default_server_id} does not exists.")
+        raise EZConfigurationException(f"The server with the default server id {self.default_server_id} does not exists.")
 
     def set_default_server(self, server: Server) -> None:
         self.add_new_server(server)
@@ -79,19 +80,19 @@ class Configuration(ExportBase):
         server.id = max_server_id + 1
         self.servers.add(server)
 
-    def get_default_ez(self) -> SavedEZ:
+    def get_default_ez(self) -> ConfigEZ:
         for ez in self.ezs:
             if ez.eid == self.default_eid:
                 return ez
-        raise ConfigurationException(
+        raise EZConfigurationException(
             f"The Einkaufszettel with the default id {self.default_eid} does not exist in configuration."
         )
 
-    def set_default_ez(self, ez: SavedEZ) -> None:
+    def set_default_ez(self, ez: ConfigEZ) -> None:
         self.add_new_ez(ez)
         self.default_eid = ez.eid
 
-    def add_new_ez(self, ez: SavedEZ) -> None:
+    def add_new_ez(self, ez: ConfigEZ) -> None:
         self.ezs.add(ez)
 
 
