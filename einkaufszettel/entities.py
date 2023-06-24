@@ -38,6 +38,10 @@ class SavedEZ:
     name: str
     server_id: int  # the server where the ez belongs to
 
+    # used by the ttk.listbox widget
+    def __str__(self):
+        return self.name
+
     def __hash__(self):
         return hash(self.eid)
 

@@ -42,7 +42,10 @@ class ChooseEzWindow(PopUpWindow):
         self.frame_listbox.rowconfigure(0)
         self.frame_listbox.grid(column=0, row=0, sticky="NSEW")
 
-        self.listbox_ezs = tkinter.Listbox(self.frame_listbox, exportselection=0, selectmode=tkinter.SINGLE)
+        self.__refresh(controller)
+        self.listbox_ezs = tkinter.Listbox(
+            self.frame_listbox, listvariable=self.listvar_ezs, exportselection=0, selectmode=tkinter.SINGLE
+        )
         self.listbox_ezs.grid(column=0, row=0, sticky="NSEW")
         self.scroller = tkinter.Scrollbar(self.frame_listbox, orient=tkinter.VERTICAL, command=self.listbox_ezs.yview)
         self.scroller.grid(column=1, row=0, sticky="NS")
@@ -71,14 +74,17 @@ class ChooseEzWindow(PopUpWindow):
         self.__refresh(controller)
 
     def __load_ez(self):
+        """Loads the EZ from remote and close the window."""
+        # load the ez from lokal cache
         pass  # todo
 
+    def __refresh_listvar_ez(self, controller: Controller):
+        # todo throw configuration exception
+        ezs = controller.get_all_ez_from_config()
+        self.listvar_ezs = tkinter.Variable(value=ezs, name="dads")
+
     def __refresh(self, controller: Controller):
-        self.ezs = controller.get_all_ez()
-        idx = 0
-        for ez in self.ezs:
-            self.listbox_ezs.insert(idx, f"{ez.name:16}")
-            idx += 1
+        self.__refresh_listvar_ez(controller)
 
 
 def dummy_action():
