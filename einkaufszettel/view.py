@@ -1,13 +1,12 @@
 import tkinter
 from enum import Enum
 from tkinter import ttk
-from typing import Dict
 
 from einkaufszettel.controller import Controller
-from einkaufszettel.entities import Einkaufszettel, ConfigEZ
+from einkaufszettel.entities import ConfigEZ
 
 
-class EZSelectLabel(Enum):
+class EZConfigSelectLabel(Enum):
     NAME = "Name"
     ID = "ID"
     SERVER_NAME = "Server-Name"
@@ -36,7 +35,7 @@ class PopUpWindow(tkinter.Toplevel):
         # self.geometry("680x550")
         self.maxsize(width=1600, height=1000)
         self.resizable(False, False)
-        self.padding = {"pady": 10, "padx": 10}
+        self.padding = {"pady": 5, "padx": 5}
 
 
 class ChooseEzWindow(PopUpWindow):
@@ -44,8 +43,8 @@ class ChooseEzWindow(PopUpWindow):
         super().__init__()
         self.controller = controller
 
-        self.columnconfigure(0, weight=20)
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=20)
         self.rowconfigure(0)
 
         self.frame_listbox = BasicFrame(self)
@@ -56,36 +55,36 @@ class ChooseEzWindow(PopUpWindow):
 
         self.__refresh()
         self.listbox_ezs = tkinter.Listbox(
-            self.frame_listbox, listvariable=self.listvar_ezs, exportselection=0, selectmode=tkinter.SINGLE
+            self.frame_listbox, listvariable=self.listvar_ezs, exportselection=0, selectmode=tkinter.SINGLE, height=20
         )
         self.listbox_ezs.grid(column=0, row=0, sticky="NSEW")
         self.scroller = tkinter.Scrollbar(self.frame_listbox, orient=tkinter.VERTICAL, command=self.listbox_ezs.yview)
         self.scroller.grid(column=1, row=0, sticky="NS")
         self.listbox_ezs["yscrollcommand"] = self.scroller.set
-        self.listbox_ezs.bind('<<ListboxSelect>>', self.__on_listbox_select)
+        self.listbox_ezs.bind("<<ListboxSelect>>", self.__on_listbox_select)
 
         self.frame_left = BasicFrame(self)
-        self.frame_left.columnconfigure(0, weight=3, minsize=80)  # todo minsize has no effect
-        self.frame_left.columnconfigure(1, weight=1, minsize=120)
+        self.frame_left.columnconfigure(0, weight=1, minsize=150)  # todo minsize has no effect
+        self.frame_left.columnconfigure(1, weight=3, minsize=450)
 
-        rows = list(range(len(EZSelectLabel) + 1))
+        rows = list(range(len(EZConfigSelectLabel) + 1))
         for i in rows:
             self.frame_left.rowconfigure(i)
-        self.frame_left.grid(column=1, row=0, **self.frame_left.options)
+        self.frame_left.grid(column=1, row=0)
 
         self.button_load = ttk.Button(self.frame_left, text="laden", command=self.__load_ez)
-        self.button_load.grid(columnspan=1, row=rows[-1], padx=5, pady=5, sticky="NS")
+        self.button_load.grid(column=0, row=rows[-1], sticky="W", **self.padding)
 
         # set static labels
-        idx = 0
+        row = 0
         self.label_map = {}
-        for select_label in EZSelectLabel:
+        for select_label in EZConfigSelectLabel:
             label = ttk.Label(self.frame_left, text=f"{select_label.value}: ")
-            label.grid(column=0, row=idx, sticky="W")
+            label.grid(column=0, row=row, sticky="W", **self.padding)
             label_dynamic = ttk.Label(self.frame_left, text=f"n.a.")
-            label_dynamic.grid(column=1, row=idx, sticky="W")
+            label_dynamic.grid(column=1, row=row, sticky="W", **self.padding)
             self.label_map[select_label] = label_dynamic
-            idx += 1
+            row += 1
 
         self.__refresh()
 
@@ -93,10 +92,10 @@ class ChooseEzWindow(PopUpWindow):
         selected_idx = self.listbox_ezs.curselection()[0]
         config_ez: ConfigEZ = self.config_ezs[selected_idx]
         server = self.controller.get_configuration().get_server_by_id(config_ez.server_id)
-        self.label_map[EZSelectLabel.ID]["text"] = config_ez.eid
-        self.label_map[EZSelectLabel.NAME]["text"] = config_ez.name
-        self.label_map[EZSelectLabel.SERVER_NAME]["text"] = server.name
-        self.label_map[EZSelectLabel.SERVER_URL]["text"] = server.base_url
+        self.label_map[EZConfigSelectLabel.ID]["text"] = config_ez.eid
+        self.label_map[EZConfigSelectLabel.NAME]["text"] = config_ez.name
+        self.label_map[EZConfigSelectLabel.SERVER_NAME]["text"] = server.name
+        self.label_map[EZConfigSelectLabel.SERVER_URL]["text"] = server.base_url
 
     def __load_ez(self):
         """Loads the EZ from remote and close the window."""
@@ -106,7 +105,7 @@ class ChooseEzWindow(PopUpWindow):
     def __refresh_listvar_ez(self):
         # todo throw configuration exception
         self.config_ezs = self.controller.get_all_ez_from_config()
-        self.listvar_ezs = tkinter.Variable(value=self.config_ezs, name="dads")
+        self.listvar_ezs = tkinter.Variable(value=self.config_ezs)
 
     def __refresh(self):
         self.__refresh_listvar_ez()
@@ -157,7 +156,7 @@ class MenuFrame(BasicFrame):
 
 
 class ListFrame(BasicFrame):
-    """Frame showed at the right of the app which shows the current items from the current shopping list."""
+    """Frame showed at the left of the app which shows the current items from the current shopping list."""
 
     def __init__(self, container):
         super().__init__(container)
@@ -187,5 +186,44 @@ class ListFrame(BasicFrame):
             self.listbox_cart.insert(i, f"test {i}")
 
 
-## util functions
+class EditFrame(BasicFrame):
+    """Frame showed at the right of the app, used for editing the current list item and save and reload the whole ez."""
 
+    def __init__(self, container):
+        super().__init__(container)
+
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(2, weight=4)
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(0, weight=100)
+
+        # subframe which holds the cart list
+        self.frame_ctrls = ttk.Frame(self)
+        self.frame_ctrls.columnconfigure(0, weight=1)
+        self.frame_ctrls.columnconfigure(2, weight=1)
+        self.frame_ctrls.columnconfigure(3, weight=1)
+        self.frame_ctrls.rowconfigure(0, weight=1)
+        self.frame_ctrls.grid(column=0, row=0, padx=5, pady=5, sticky="NWE")
+
+        self.button_refresh_state = ttk.Button(
+            self.frame_ctrls, text="reload from remote", command=self.__on_click_refresh_state
+        )
+        self.button_refresh_state.grid(column=0, row=0, sticky="W")
+        self.button_load_remote = ttk.Button(
+            self.frame_ctrls, text="reload from remote", command=self.__on_click_load_remote
+        )
+        self.button_load_remote.grid(column=1, row=0, sticky="W")
+
+        self.button_save_remote = ttk.Button(
+            self.frame_ctrls, text="save to remote", command=self.__on_click_save_remote
+        )
+        self.button_save_remote.grid(column=2, row=0, sticky="W")
+
+    def __on_click_refresh_state(self):
+        pass
+
+    def __on_click_load_remote(self):
+        pass
+
+    def __on_click_save_remote(self):
+        pass
