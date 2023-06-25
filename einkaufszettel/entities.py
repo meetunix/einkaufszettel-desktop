@@ -4,7 +4,7 @@ import uuid
 from dataclasses import dataclass
 from typing import List, Set
 
-from einkaufszettel.exceptions import EZConfigurationException
+from einkaufszettel.exceptions import EZConfigurationException, EZException
 
 
 @dataclass
@@ -65,7 +65,9 @@ class Configuration(ExportBase):
         for server in self.servers:
             if server.id == id:
                 return server
-        raise EZConfigurationException(f"The server with the default server id {self.default_server_id} does not exists.")
+        raise EZConfigurationException(
+            f"The server with the default server id {self.default_server_id} does not exists."
+        )
 
     def set_default_server(self, server: Server) -> None:
         self.add_new_server(server)
@@ -107,6 +109,10 @@ class Item:
     catDescription: str
     catColor: str
 
+    # used by the ttk.listbox widget
+    def __str__(self):
+        return f"{self.amount:3} x {self.itemName:20}"
+
 
 @dataclass
 class Einkaufszettel(ExportBase):
@@ -116,6 +122,12 @@ class Einkaufszettel(ExportBase):
     name: str
     version: int
     items: List[Item]
+
+    def get_item_by_iid(self, iid: str) -> Item:
+        for item in self.items:
+            if item.iid == iid:
+                return item
+        raise EZException(f"The requested item is not part of the shopping list.")
 
     def get_json(self):
         return json.dumps(dataclasses.asdict(self), sort_keys=True)

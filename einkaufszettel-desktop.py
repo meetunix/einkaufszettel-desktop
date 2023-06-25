@@ -30,8 +30,9 @@ class EinkaufszettelDesktop(tk.Tk):
         self.edit_frame = EditFrame(self)
         self.edit_frame.grid(column=1, row=1, sticky="NSEW")
 
-        # self.controller.get_ez_from_remote("76f2c9e4-ea57-4df6-bdbf-cc7a5301df80", print)
-        # self.controller.get_ez_from_remote("76f2c9e4-ea57-4df6-bdbf-cc7a5301df81", print)
+        self.list_frame.set_editor_frame_and_refresh(self.edit_frame)
+        self.edit_frame.set_list_frame_and_refresh(self.list_frame)
+        self.menu_frame.set_list_frame(self.list_frame)
 
     def on_closing(self):
         self.destroy()

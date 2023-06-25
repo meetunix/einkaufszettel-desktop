@@ -28,6 +28,10 @@ class Controller:
             self.__load_config(self.config_path)
         return self.configuration
 
+    def get_default_ez_from_cache(self) -> Einkaufszettel:
+        config_ez = self.configuration.get_default_ez()
+        return self.get_ez_from_cache(config_ez.eid)
+
     def set_server(self, server: Server) -> None:
         self.client.set_server = server
 
@@ -43,7 +47,7 @@ class Controller:
         return sorted(list(self.configuration.ezs), key=lambda x: x.name)
 
     # callbacks
-    def __fetch_and_set_ez(self, eid: str, callback) -> None:
+    def __fetch_and_set_ez(self, eid: str, callback, *args) -> None:
         try:
             response = self.client.get_ez(eid)
         except Exception as e:
