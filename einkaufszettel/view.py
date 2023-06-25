@@ -255,7 +255,7 @@ class EditFrame(BasicFrame):
         super().__init__(container)
 
         self.controller = container.controller
-        self.current_ez = self.controller.get_default_ez_from_cache()
+        self.current_ez: Einkaufszettel = self.controller.get_default_ez_from_cache()
         self.list: Optional[ListFrame] = None
 
         self.columnconfigure(0, weight=1)
@@ -334,7 +334,16 @@ class EditFrame(BasicFrame):
         self.frame_item.grid(column=0, row=2, sticky="NSEW")
 
     def refresh(self):
-        pass
+        self.refresh_ez_stats()
+
+    def refresh_ez_stats(self):
+        self.controller.get_ez_from_remote(self.current_ez.eid, self.__set_remote_version)
+        self.ez_labels[EZLabels.NAME]["text"] = self.current_ez.name
+        self.ez_labels[EZLabels.SERVER_NAME]["text"] = self.controller.get_current_server().name
+        self.ez_labels[EZLabels.VERSION_LOCAL]["text"] = self.current_ez.version
+
+    def __set_remote_version(self, ez: Einkaufszettel):
+        self.ez_labels[EZLabels.VERSION_SERVER]["text"] = ez.version
 
     def refresh_by_iid(self, iid: str):
         item: Item = self.current_ez.get_item_by_iid(iid)
@@ -350,7 +359,7 @@ class EditFrame(BasicFrame):
         self.refresh()
 
     def __on_click_refresh_state(self):
-        pass
+        self.refresh_ez_stats()
 
     def __on_click_load_remote(self):
         pass

@@ -46,6 +46,9 @@ class Controller:
     def get_all_ez_from_config(self) -> List[ConfigEZ]:
         return sorted(list(self.configuration.ezs), key=lambda x: x.name)
 
+    def get_current_server(self) -> Server:
+        return self.client.server
+
     # callbacks
     def __fetch_and_set_ez(self, eid: str, callback, *args) -> None:
         try:
