@@ -24,3 +24,10 @@ class EinkaufszettelRestClient:
         # print(f"response: {r.status_code} -> {r.text}")
         r.raise_for_status()
         return r.text
+
+    def put_ez(self, eid: str, body: str) -> str:
+        url = f"{self.server.base_url}:{self.server.port}/r0/ez/{eid}"
+        r = self.session.put(url, data=body, headers=self.put_headers)
+        r.raise_for_status()
+        print(r.status_code)
+        return r.text

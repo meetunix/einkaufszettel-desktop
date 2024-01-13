@@ -1,5 +1,6 @@
 import tkinter
 from enum import Enum
+from functools import partial
 from tkinter import ttk
 from typing import Dict, Optional
 
@@ -271,18 +272,15 @@ class EditFrame(BasicFrame):
         self.frame_ctrls.rowconfigure(0, weight=1)
         self.frame_ctrls.grid(column=0, row=0, padx=5, pady=5, ipadx=15, ipady=15, sticky="NW")
 
-        self.button_refresh_state = ttk.Button(
-            self.frame_ctrls, text="refresh state", command=self.__on_click_refresh_state
+        self.button_load = ttk.Button(
+            self.frame_ctrls, text="load ez from server", command=self.__on_click_load_ez_from_remote
         )
-        self.button_refresh_state.grid(column=0, row=0, sticky="W")
-        self.button_load_remote = ttk.Button(
-            self.frame_ctrls, text="load from server", command=self.__on_click_load_remote
-        )
-        self.button_load_remote.grid(column=1, row=0, sticky="W")
+        self.button_load.grid(column=0, row=0, sticky="W")
+
         self.button_save_remote = ttk.Button(
-            self.frame_ctrls, text="save to server (publish)", command=self.__on_click_save_remote
+            self.frame_ctrls, text="publish ez to server", command=self.__on_click_save_ez_to_remote
         )
-        self.button_save_remote.grid(column=2, row=0, sticky="W")
+        self.button_save_remote.grid(column=1, row=0, sticky="W")
 
         # subframe which holds the current ez state
         self.frame_ez_state = ttk.LabelFrame(self, text="current shopping list")
@@ -311,6 +309,8 @@ class EditFrame(BasicFrame):
             self.frame_item.rowconfigure(i)
 
         # build editable entries for an item
+        # todo on-change: save changes to object
+        # todo on-change: execute validator
         column = 0
         row = 0
         item_entry = 0
@@ -322,6 +322,7 @@ class EditFrame(BasicFrame):
             var = select_label.value[1]()  # create correct type variable
             entry = ttk.Entry(self.frame_item, textvariable=var, name=select_label.value[0])
             entry.grid(column=column, row=row, sticky="W", padx=5, pady=5)
+            entry.bind("<KeyRelease>", partial(self.__on_item_entry_change, item_label=select_label))
             self.item_vars[select_label] = var
             item_entry += 1
             if item_entry % 2 == 0:
@@ -333,17 +334,32 @@ class EditFrame(BasicFrame):
 
         self.frame_item.grid(column=0, row=2, sticky="NSEW")
 
-    def refresh(self):
-        self.refresh_ez_stats()
+    def __on_item_entry_change(self, event, item_label: ItemLabels = None):
+        print(f"changed entry : {item_label}")
+        # todo add validation and store value to ez
 
-    def refresh_ez_stats(self):
-        self.controller.get_ez_from_remote(self.current_ez.eid, self.__set_remote_version)
+    def refresh(self):
+        self.get_ez_from_remote_and_refresh()
+
+    def get_ez_from_remote_and_refresh(self):
+        self.controller.get_ez_from_remote(self.current_ez.eid, self.__set_new_ez)
+
+    def put_ez_to_remote_and_refresh(self):
+        self.controller.put_ez_to_remote(self.current_ez, self.__set_new_ez)
+
+    def __set_new_ez(self, ez: Einkaufszettel):
+        self.current_ez = ez
+
         self.ez_labels[EZLabels.NAME]["text"] = self.current_ez.name
         self.ez_labels[EZLabels.SERVER_NAME]["text"] = self.controller.get_current_server().name
         self.ez_labels[EZLabels.VERSION_LOCAL]["text"] = self.current_ez.version
 
-    def __set_remote_version(self, ez: Einkaufszettel):
-        self.ez_labels[EZLabels.VERSION_SERVER]["text"] = ez.version
+        self.ez_labels[EZLabels.VERSION_SERVER]["text"] = self.current_ez.version
+
+        self.list.refresh_ez_and_item_list(ez)
+
+        for item in self.current_ez.items:
+            self.refresh_by_iid(item.iid)
 
     def refresh_by_iid(self, iid: str):
         item: Item = self.current_ez.get_item_by_iid(iid)
@@ -358,11 +374,8 @@ class EditFrame(BasicFrame):
         self.list = list_frame
         self.refresh()
 
-    def __on_click_refresh_state(self):
-        self.refresh_ez_stats()
+    def __on_click_load_ez_from_remote(self):
+        self.get_ez_from_remote_and_refresh()
 
-    def __on_click_load_remote(self):
-        pass
-
-    def __on_click_save_remote(self):
-        pass
+    def __on_click_save_ez_to_remote(self):
+        self.put_ez_to_remote_and_refresh()
