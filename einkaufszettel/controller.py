@@ -36,12 +36,10 @@ class Controller:
         self.client.set_server = server
 
     def get_ez_from_remote(self, eid: str, callback) -> None:
-        print("get ez")
         self.submit_async_task(self.__fetch_and_set_ez, eid, callback)
 
     def put_ez_to_remote(self, ez: Einkaufszettel, callback) -> None:
-        print("put ez")
-        self.submit_async_task(self.__put_and_set_ez, callback)
+        self.submit_async_task(self.__put_and_set_ez, ez, callback)
 
     def get_ez_from_cache(self, eid: str) -> Einkaufszettel:
         path = self.cache_path / Path(f"{eid}.json")
@@ -66,8 +64,8 @@ class Controller:
 
     def __put_and_set_ez(self, ez: Einkaufszettel, callback) -> bool:
         try:
-            json_es = ez.get_json()
-            response = self.client.put_ez(ez.eid, json_es.dumps())
+            json_ez = ez.get_json()
+            response = self.client.put_ez(ez.eid, json_ez)
         except Exception as e:
             print(e)
             return False

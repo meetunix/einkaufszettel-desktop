@@ -1,4 +1,5 @@
 import tkinter
+from copy import deepcopy
 from enum import Enum
 from functools import partial
 from tkinter import ttk
@@ -15,14 +16,14 @@ class EZConfigSelectLabel(Enum):
     SERVER_URL = "Server-URL"
 
 
-class EZLabels(Enum):
+class EZLabel(Enum):
     NAME = "Name"
-    VERSION_LOCAL = "Version server"
-    VERSION_SERVER = "Version local"
+    VERSION_LOCAL = "Version local"
+    VERSION_SERVER = "Version server"
     SERVER_NAME = "Server-Name"
 
 
-class ItemLabels(Enum):
+class ItemLabel(Enum):
     NAME = ("name", tkinter.StringVar)
     ORIDNAL = ("ordinal", tkinter.IntVar)
     AMOUNT = ("amount", tkinter.IntVar)
@@ -197,6 +198,7 @@ class ListFrame(BasicFrame):
         self.current_ez = self.controller.get_default_ez_from_cache()
         self.current_item_list = []  # the sorted list of items independent of the item of the ez
         self.editor: Optional[EditFrame] = None
+        self.current_selected_id = 0
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -232,21 +234,27 @@ class ListFrame(BasicFrame):
         self.editor = editor_frame
         self.refresh()
 
+    def get_current_selected_item_id(self) -> id:
+        return self.listbox_cart.curselection()[0]
+
     def __on_listbox_select(self, event) -> None:
-        selected_idx = self.listbox_cart.curselection()[0]
-        self.refresh_item_editor(selected_idx)
+        self.current_selected_id = self.get_current_selected_item_id()
+        self.refresh_item_editor(self.current_selected_id)
 
     def refresh_item_editor(self, idx):
         """Refresh the editor frame with the selected item stored under given index."""
         iid: str = self.current_item_list[idx].iid
         self.editor.refresh_by_iid(iid)
 
-    def refresh_ez_and_item_list(self, ez: Einkaufszettel) -> None:
-        """Refresh the own item list and."""
+    def refresh_itembox(self, ez: Einkaufszettel) -> None:
         self.current_ez = ez
-        self.editor.current_ez = ez
         self.current_item_list = sorted(ez.items, key=lambda i: i.ordinal)
         self.listvar_items.set(self.current_item_list)
+
+    def refresh_ez_and_item_list(self, ez: Einkaufszettel) -> None:
+        """Refresh the own item list and editor frame."""
+        self.refresh_itembox(ez)
+        self.refresh_item_editor(self.current_selected_id)
 
 
 class EditFrame(BasicFrame):
@@ -257,6 +265,9 @@ class EditFrame(BasicFrame):
 
         self.controller = container.controller
         self.current_ez: Einkaufszettel = self.controller.get_default_ez_from_cache()
+        # load the remote version of the local ez
+        # todo: handle if no remote version exits
+        self.remote_ez: Optional[Einkaufszettel] = None
         self.list: Optional[ListFrame] = None
 
         self.columnconfigure(0, weight=1)
@@ -289,7 +300,7 @@ class EditFrame(BasicFrame):
         # build labels for showing information for the current EZ
         column = 0
         self.ez_labels = {}
-        for select_label in EZLabels:
+        for select_label in EZLabel:
             self.frame_ez_state.columnconfigure(column, weight=1)
             label = ttk.Label(self.frame_ez_state, text=f"{select_label.value}: ")
             label.grid(column=column, row=0, sticky="W", padx=5, pady=5)
@@ -309,13 +320,11 @@ class EditFrame(BasicFrame):
             self.frame_item.rowconfigure(i)
 
         # build editable entries for an item
-        # todo on-change: save changes to object
-        # todo on-change: execute validator
         column = 0
         row = 0
         item_entry = 0
-        self.item_vars: Dict[ItemLabels, tkinter.Variable] = {}
-        for select_label in ItemLabels:
+        self.item_vars: Dict[ItemLabel, tkinter.Variable] = {}
+        for select_label in ItemLabel:
             label = ttk.Label(self.frame_item, text=f"{select_label.value[0]}: ")
             label.grid(column=column, row=row, sticky="W", padx=5, pady=5)
             row += 1
@@ -334,45 +343,69 @@ class EditFrame(BasicFrame):
 
         self.frame_item.grid(column=0, row=2, sticky="NSEW")
 
-    def __on_item_entry_change(self, event, item_label: ItemLabels = None):
-        print(f"changed entry : {item_label}")
-        # todo add validation and store value to ez
+    def __change_item_value(self, item_label: ItemLabel, value) -> None:
+        item = self.current_ez.get_item_by_iid(self.current_iid)
+        setattr(item, item_label.value[0], value)
+
+    def __on_item_entry_change(self, event, item_label: ItemLabel = None):
+        tkinter_var = self.item_vars[item_label]
+
+        # change version
+        print(f"local-version: {self.current_ez.version} - remote-version {self.remote_ez.version}")
+        if self.current_ez.version <= self.remote_ez.version:
+            self.current_ez.version = self.remote_ez.version + 1
+
+        self.ez_labels[EZLabel.VERSION_LOCAL]["text"] = self.current_ez.version
+        # todo add validation before writing values to EZ
+        value = tkinter_var.get()
+        self.__change_item_value(item_label, value)
+        self.list.refresh_itembox(self.current_ez)
 
     def refresh(self):
         self.get_ez_from_remote_and_refresh()
 
     def get_ez_from_remote_and_refresh(self):
-        self.controller.get_ez_from_remote(self.current_ez.eid, self.__set_new_ez)
+        self.controller.get_ez_from_remote(self.current_ez.eid, self.__set_new_ez_from_remote)
 
     def put_ez_to_remote_and_refresh(self):
-        self.controller.put_ez_to_remote(self.current_ez, self.__set_new_ez)
+        self.controller.put_ez_to_remote(self.current_ez, self.__set_new_ez_from_remote)
+
+    def __set_new_ez_from_remote(self, ez: Einkaufszettel):
+        print("plop")
+        self.remote_ez = deepcopy(ez)
+        self.__set_new_ez(ez)
 
     def __set_new_ez(self, ez: Einkaufszettel):
         self.current_ez = ez
 
-        self.ez_labels[EZLabels.NAME]["text"] = self.current_ez.name
-        self.ez_labels[EZLabels.SERVER_NAME]["text"] = self.controller.get_current_server().name
-        self.ez_labels[EZLabels.VERSION_LOCAL]["text"] = self.current_ez.version
-
-        self.ez_labels[EZLabels.VERSION_SERVER]["text"] = self.current_ez.version
-
-        self.list.refresh_ez_and_item_list(ez)
+        self.ez_labels[EZLabel.NAME]["text"] = self.current_ez.name
+        self.ez_labels[EZLabel.SERVER_NAME]["text"] = self.controller.get_current_server().name
+        self.ez_labels[EZLabel.VERSION_LOCAL]["text"] = self.current_ez.version
+        self.ez_labels[EZLabel.VERSION_SERVER]["text"] = self.remote_ez.version if self.remote_ez is not None else ""
 
         for item in self.current_ez.items:
             self.refresh_by_iid(item.iid)
 
+        self.list.refresh_ez_and_item_list(ez)
+
     def refresh_by_iid(self, iid: str):
+        self.current_iid = iid
         item: Item = self.current_ez.get_item_by_iid(iid)
-        self.item_vars[ItemLabels.NAME].set(item.itemName)
-        self.item_vars[ItemLabels.ORIDNAL].set(item.ordinal)
-        self.item_vars[ItemLabels.AMOUNT].set(item.amount)
-        self.item_vars[ItemLabels.SIZE].set(item.size)
-        self.item_vars[ItemLabels.UNIT].set(item.unit)
-        self.item_vars[ItemLabels.CATEGORY_DESCRIPTION].set(item.catDescription)
+        self.item_vars[ItemLabel.NAME].set(item.itemName)
+        self.item_vars[ItemLabel.ORIDNAL].set(item.ordinal)
+        self.item_vars[ItemLabel.AMOUNT].set(item.amount)
+        self.item_vars[ItemLabel.SIZE].set(item.size)
+        self.item_vars[ItemLabel.UNIT].set(item.unit)
+        self.item_vars[ItemLabel.CATEGORY_DESCRIPTION].set(item.catDescription)
+
+    def __load_inital_remote_ez(self, remote_ez: Einkaufszettel):
+        self.remote_ez = remote_ez
+        self.ez_labels[EZLabel.VERSION_SERVER]["text"] = self.remote_ez.version if self.remote_ez is not None else ""
 
     def set_list_frame_and_refresh(self, list_frame: ListFrame):
         self.list = list_frame
-        self.refresh()
+        self.controller.get_ez_from_remote(self.current_ez.eid, self.__load_inital_remote_ez)
+        self.__set_new_ez(self.current_ez)
 
     def __on_click_load_ez_from_remote(self):
         self.get_ez_from_remote_and_refresh()

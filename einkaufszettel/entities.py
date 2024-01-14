@@ -123,11 +123,14 @@ class Einkaufszettel(ExportBase):
     version: int
     items: List[Item]
 
+    def __post_init__(self):
+        self.__item_map = {item.iid: item for item in self.items}
+
     def get_item_by_iid(self, iid: str) -> Item:
-        for item in self.items:
-            if item.iid == iid:
-                return item
-        raise EZException(f"The requested item is not part of the shopping list.")
+        if iid in self.__item_map:
+            return self.__item_map[iid]
+        else:
+            raise EZException(f"The requested item is not part of the shopping list.")
 
     def get_json(self):
         return json.dumps(dataclasses.asdict(self), sort_keys=True)

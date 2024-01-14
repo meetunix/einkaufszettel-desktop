@@ -18,6 +18,7 @@ class EinkaufszettelRestClient:
         self.get_headers = {"Accept": "application/json"}
 
     def get_ez(self, eid: str) -> str:
+        print("get ez")
         url = f"{self.server.base_url}:{self.server.port}/r0/ez/{eid}"
 
         r = self.session.get(url, headers=self.get_headers, timeout=2)
@@ -29,5 +30,5 @@ class EinkaufszettelRestClient:
         url = f"{self.server.base_url}:{self.server.port}/r0/ez/{eid}"
         r = self.session.put(url, data=body, headers=self.put_headers)
         r.raise_for_status()
-        print(r.status_code)
+        print(f"put ez -> {r.status_code}")
         return r.text
