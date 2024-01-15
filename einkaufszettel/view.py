@@ -6,7 +6,7 @@ from tkinter import ttk
 from typing import Dict, Optional
 
 from einkaufszettel.controller import Controller
-from einkaufszettel.entities import ConfigEZ, Einkaufszettel, Item
+from einkaufszettel.entities import ConfigEZ, Einkaufszettel
 
 
 class EZConfigSelectLabel(Enum):
@@ -24,12 +24,12 @@ class EZLabel(Enum):
 
 
 class ItemLabel(Enum):
-    NAME = ("name", tkinter.StringVar)
+    NAME = ("itemName", tkinter.StringVar)
     ORIDNAL = ("ordinal", tkinter.IntVar)
     AMOUNT = ("amount", tkinter.IntVar)
     SIZE = ("size", tkinter.DoubleVar)
     UNIT = ("unit", tkinter.StringVar)
-    CATEGORY_DESCRIPTION = ("category", tkinter.StringVar)
+    CATEGORY_DESCRIPTION = ("catDescription", tkinter.StringVar)
 
 
 class BasicFrame(ttk.Frame):
@@ -123,7 +123,6 @@ class ChooseEzWindow(PopUpWindow):
     def __load_ez(self):
         """Load chosen EZ from cache and propagate it to the main frames."""
         ez: Einkaufszettel = self.controller.get_ez_from_cache(self.current_config_ez.eid)
-        print(ez)
         self.list.refresh_ez_and_item_list(ez)
         self.list.refresh_item_editor(0)
         self.destroy()
@@ -345,6 +344,7 @@ class EditFrame(BasicFrame):
 
     def __change_item_value(self, item_label: ItemLabel, value) -> None:
         item = self.current_ez.get_item_by_iid(self.current_iid)
+        print(f"change value {item_label.value[0]}: {getattr(item, item_label.value[0])} --> {value}")
         setattr(item, item_label.value[0], value)
 
     def __on_item_entry_change(self, event, item_label: ItemLabel = None):
@@ -390,7 +390,12 @@ class EditFrame(BasicFrame):
 
     def refresh_by_iid(self, iid: str):
         self.current_iid = iid
-        item: Item = self.current_ez.get_item_by_iid(iid)
+
+        if self.current_ez.is_item_part_of_ez(iid):
+            item = self.current_ez.get_item_by_iid(iid)
+        else:
+            item = self.current_ez.get_first_item()
+
         self.item_vars[ItemLabel.NAME].set(item.itemName)
         self.item_vars[ItemLabel.ORIDNAL].set(item.ordinal)
         self.item_vars[ItemLabel.AMOUNT].set(item.amount)

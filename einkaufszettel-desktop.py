@@ -34,7 +34,11 @@ class EinkaufszettelDesktop(tk.Tk):
         self.edit_frame.set_list_frame_and_refresh(self.list_frame)
         self.menu_frame.set_list_frame(self.list_frame)
 
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
     def on_closing(self):
+        ez = self.edit_frame.current_ez
+        self.controller.save_ez_to_cache(ez)
         self.destroy()
 
 

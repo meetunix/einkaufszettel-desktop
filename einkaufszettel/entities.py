@@ -132,8 +132,18 @@ class Einkaufszettel(ExportBase):
         else:
             raise EZException(f"The requested item is not part of the shopping list.")
 
-    def get_json(self):
-        return json.dumps(dataclasses.asdict(self), sort_keys=True)
+    def is_item_part_of_ez(self, iid: str):
+        return iid in self.items
+
+    def get_first_item(self):
+        return self.items[0]
+
+    def get_json(self, with_indent=False):
+        return (
+            json.dumps(dataclasses.asdict(self), sort_keys=True, indent=2)
+            if with_indent
+            else json.dumps(dataclasses.asdict(self), sort_keys=True)
+        )
 
     @staticmethod
     def from_json(json_ez: json):

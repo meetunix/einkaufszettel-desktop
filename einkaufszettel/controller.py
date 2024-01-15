@@ -45,6 +45,10 @@ class Controller:
         path = self.cache_path / Path(f"{eid}.json")
         return Einkaufszettel.from_json(json.loads(path.read_text()))
 
+    def save_ez_to_cache(self, ez: Einkaufszettel) -> None:
+        path = self.cache_path / Path(f"{ez.eid}.json")
+        path.write_text(ez.get_json(with_indent=True))
+
     def get_all_ez_from_config(self) -> List[ConfigEZ]:
         return sorted(list(self.configuration.ezs), key=lambda x: x.name)
 
